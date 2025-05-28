@@ -1,5 +1,7 @@
 ﻿using Wpf.Ui.Abstractions.Controls;
 using Wpf.Ui.Appearance;
+using System.Reflection;
+using System.Security.Policy;
 
 namespace H3C_BPMT_E.ViewModels.Pages
 {
@@ -8,7 +10,10 @@ namespace H3C_BPMT_E.ViewModels.Pages
         private bool _isInitialized = false;
 
         [ObservableProperty]
-        private string _appVersion = String.Empty;
+        private string _appVersionWithoutUrl = String.Empty;
+
+        [ObservableProperty]
+        private string _url = String.Empty;
 
         [ObservableProperty]
         private ApplicationTheme _currentTheme = ApplicationTheme.Unknown;
@@ -26,7 +31,10 @@ namespace H3C_BPMT_E.ViewModels.Pages
         private void InitializeViewModel()
         {
             CurrentTheme = ApplicationThemeManager.GetAppTheme();
-            AppVersion = $"UiDesktopApp1 - {GetAssemblyVersion()}";
+            AppVersionWithoutUrl = $"H3C BPMT E - {GetAssemblyVersion()}";
+            AppVersionWithoutUrl += $"\r\n\r\n© 2025 宁波大学附属人民医院 All rights reserved.";
+            AppVersionWithoutUrl += $"\r\n\r\nAuthor: 蔡健灵 ";
+            Url = "https://github.com/CaiJianling/H3C-BPMT-E";
 
             _isInitialized = true;
         }
