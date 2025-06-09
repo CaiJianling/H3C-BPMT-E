@@ -1,13 +1,13 @@
 ﻿<Page
-    x:Class="H3C_BPMT_E.Views.Pages.DashboardPage"
+    x:Class="H3C_BPMT_E.Views.Pages.ConsoleChangePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:H3C_BPMT_E.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="DashboardPage"
-    d:DataContext="{d:DesignInstance local:DashboardPage,
+    Title="ConsoleChangePage"
+    d:DataContext="{d:DesignInstance local:ConsoleChangePage,
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -45,7 +45,7 @@
             <ui:TextBlock
                 Margin="10,0,0,0"
                 FontSize="20"
-                Text="用户密码修改"
+                Text="Console 口密码修改"
                 TextWrapping="Wrap" />
         </StackPanel>
 
@@ -78,13 +78,13 @@
                     IsReadOnly="True" />
                 <DataGridTextColumn
                     Width="*"
-                    Binding="{Binding OldPassword}"
-                    Header="原密码"
+                    Binding="{Binding Password}"
+                    Header="密码"
                     IsReadOnly="True" />
                 <DataGridTextColumn
                     Width="*"
-                    Binding="{Binding NewPassword}"
-                    Header="新密码"
+                    Binding="{Binding ConsolePassword}"
+                    Header="Console 口密码"
                     IsReadOnly="True" />
                 <DataGridTextColumn
                     Width="*"

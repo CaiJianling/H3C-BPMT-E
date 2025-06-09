@@ -52,6 +52,8 @@ namespace H3C_BPMT_E
                 services.AddSingleton<DataViewModel>();
                 services.AddSingleton<SettingsPage>();
                 services.AddSingleton<SettingsViewModel>();
+                services.AddSingleton<ConsoleChangePage>();
+                services.AddSingleton<ConsoleChangeViewModel>();
             }).Build();
 
         /// <summary>

@@ -21,10 +21,10 @@ using System.Data;
 
 namespace H3C_BPMT_E.ViewModels.Pages
 {
-    public partial class DashboardViewModel : ObservableObject
+    public partial class ConsoleChangeViewModel : ObservableObject
     {
         [ObservableProperty]
-        private ObservableCollection<SwitchInfo>? _switchList;
+        private ObservableCollection<SwitchInfoConsole>? _switchList;
 
         [ObservableProperty]
         private string? _statusText;
@@ -51,7 +51,7 @@ namespace H3C_BPMT_E.ViewModels.Pages
 
         private void InitializeViewModel()
         {
-            SwitchList = new ObservableCollection<SwitchInfo>();
+            SwitchList = new ObservableCollection<SwitchInfoConsole>();
             StatusText = "执行状态: 完成0，剩余0";
             ProgressValue = 0;
 
@@ -76,9 +76,9 @@ namespace H3C_BPMT_E.ViewModels.Pages
             }
         }
 
-        private ObservableCollection<SwitchInfo> ReadExcelFile(string filePath)
+        private ObservableCollection<SwitchInfoConsole> ReadExcelFile(string filePath)
         {
-            List<SwitchInfo> switchList = new List<SwitchInfo>();
+            List<SwitchInfoConsole> switchList = new List<SwitchInfoConsole>();
 
             using (var package = new ExcelPackage(new FileInfo(filePath)))
             {
@@ -89,19 +89,19 @@ namespace H3C_BPMT_E.ViewModels.Pages
 
                 for (int row = 2; row <= rowCount; row++) // 假设第一行是标题行
                 {
-                    switchList.Add(new SwitchInfo
+                    switchList.Add(new SwitchInfoConsole
                     {
                         IPAddress = worksheet.Cells[row, 1].Value?.ToString(),
                         Port = worksheet.Cells[row, 2].Value != null ? Convert.ToInt32(worksheet.Cells[row, 2].Value) : 22,
                         Username = worksheet.Cells[row, 3].Value?.ToString(),
-                        OldPassword = worksheet.Cells[row, 4].Value?.ToString(),
-                        NewPassword = worksheet.Cells[row, 5].Value?.ToString(),
+                        Password = worksheet.Cells[row, 4].Value?.ToString(),
+                        ConsolePassword = worksheet.Cells[row, 5].Value?.ToString(),
                         CompletionStatus = "待处理"
                     });
                 }
             }
 
-            return new ObservableCollection<SwitchInfo>(switchList);
+            return new ObservableCollection<SwitchInfoConsole>(switchList);
         }
 
         [RelayCommand]
@@ -126,27 +126,27 @@ namespace H3C_BPMT_E.ViewModels.Pages
 
             await Task.Run(() =>
             {
-                Parallel.ForEach(SwitchList, options, switchInfo =>
+                Parallel.ForEach(SwitchList, options, switchInfoConsole =>
                 {
                     bool success = false;
                     try
                     {
-                        success = ChangePassword(switchInfo);
+                        success = ChangePassword(switchInfoConsole);
                     }
                     catch (Exception ex)
                     {
-                        switchInfo.CompletionStatus = $"错误: {ex.Message}";
-                        logging($"未知错误: {switchInfo.IPAddress} - {ex.Message}");
+                        switchInfoConsole.CompletionStatus = $"错误: {ex.Message}";
+                        logging($"未知错误: {switchInfoConsole.IPAddress} - {ex.Message}");
                     }
 
                     if (success)
                     {
-                        switchInfo.CompletionStatus = "已完成";
+                        switchInfoConsole.CompletionStatus = "已完成";
                         Interlocked.Increment(ref successCount);
                     }
                     else
                     {
-                        switchInfo.CompletionStatus = "失败";
+                        switchInfoConsole.CompletionStatus = "失败";
                         Interlocked.Increment(ref failCount); // 失败时单独计数
                     }
 
@@ -165,10 +165,10 @@ namespace H3C_BPMT_E.ViewModels.Pages
             StartText = "开始";
         }
 
-        private bool ChangePassword(SwitchInfo switchInfo)
+        private bool ChangePassword(SwitchInfoConsole switchInfoConsole)
         {
-            var deviceInfo = new ConnectionInfo(switchInfo.IPAddress, switchInfo.Port, switchInfo.Username,
-                new PasswordAuthenticationMethod(switchInfo.Username, switchInfo.OldPassword));
+            var deviceInfo = new ConnectionInfo(switchInfoConsole.IPAddress, switchInfoConsole.Port, switchInfoConsole.Username,
+                new PasswordAuthenticationMethod(switchInfoConsole.Username, switchInfoConsole.Password));
 
             using (var conn = new SshClient(deviceInfo))
             {
@@ -178,7 +178,7 @@ namespace H3C_BPMT_E.ViewModels.Pages
 
                     if (!conn.IsConnected)
                     {
-                        logging($"认证失败: {switchInfo.IPAddress} - 无法连接");
+                        logging($"认证失败: {switchInfoConsole.IPAddress} - 无法连接");
                         conn.Disconnect();
                         return false;
                     }
@@ -189,8 +189,8 @@ namespace H3C_BPMT_E.ViewModels.Pages
                     var commands = new List<string>
                     {
                         "system-view",
-                        $"local-user {switchInfo.Username}",
-                        $"password simple {switchInfo.NewPassword}",
+                        $"user-interface console 0",
+                        $"set authentication password cipher {switchInfoConsole.ConsolePassword}",
                         "quit",
                         "quit"
                     };
@@ -216,32 +216,32 @@ namespace H3C_BPMT_E.ViewModels.Pages
 
                     if (output.ToLower().Contains("successfully") || output.ToLower().Contains("configuration is saved"))
                     {
-                        logging($"用户密码修改并保存成功: {switchInfo.IPAddress}");
+                        logging($"Console 密码修改并保存成功: {switchInfoConsole.IPAddress}");
                         conn.Disconnect();
                         return true;
                     }
                     else
                     {
-                        logging($"保存用户密码可能失败: {switchInfo.IPAddress} - 输出: {output.Substring(0, Math.Min(output.Length, 1000))}...");
+                        logging($"保存Console 密码可能失败: {switchInfoConsole.IPAddress} - 输出: {output.Substring(0, Math.Min(output.Length, 1000))}...");
                         conn.Disconnect();
                         return false;
                     }
                 }
                 catch (AuthenticationException)
                 {
-                    logging($"认证失败: {switchInfo.IPAddress} - 密码错误");
+                    logging($"认证失败: {switchInfoConsole.IPAddress} - 密码错误");
                     conn.Disconnect();
                     return false;
                 }
                 catch (TimeoutException)
                 {
-                    logging($"连接超时: {switchInfo.IPAddress} - 检查网络");
+                    logging($"连接超时: {switchInfoConsole.IPAddress} - 检查网络");
                     conn.Disconnect();
                     return false;
                 }
                 catch (Exception ex)
                 {
-                    logging($"未知错误: {switchInfo.IPAddress} - {ex.Message}");
+                    logging($"未知错误: {switchInfoConsole.IPAddress} - {ex.Message}");
                     conn.Disconnect();
                     return false;
                 }
@@ -292,13 +292,13 @@ namespace H3C_BPMT_E.ViewModels.Pages
         }
     }
 
-    public class SwitchInfo : INotifyPropertyChanged
+    public class SwitchInfoConsole : INotifyPropertyChanged
     {
         private string _ipAddress;
         private int _port;
         private string _username;
-        private string _oldPassword;
-        private string _newPassword;
+        private string _password;
+        private string _consolePassword;
         private string _completionStatus;
 
         public string IPAddress
@@ -331,23 +331,23 @@ namespace H3C_BPMT_E.ViewModels.Pages
             }
         }
 
-        public string OldPassword
+        public string Password
         {
-            get { return _oldPassword; }
+            get { return _password; }
             set
             {
-                _oldPassword = value;
-                OnPropertyChanged(nameof(OldPassword));
+                _password = value;
+                OnPropertyChanged(nameof(Password));
             }
         }
 
-        public string NewPassword
+        public string ConsolePassword
         {
-            get { return _newPassword; }
+            get { return _consolePassword; }
             set
             {
-                _newPassword = value;
-                OnPropertyChanged(nameof(NewPassword));
+                _consolePassword = value;
+                OnPropertyChanged(nameof(ConsolePassword));
             }
         }
 

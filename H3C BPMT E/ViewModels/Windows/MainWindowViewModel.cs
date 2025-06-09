@@ -13,9 +13,15 @@ namespace H3C_BPMT_E.ViewModels.Windows
         {
             new NavigationViewItem()
             {
-                Content = "首页",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
+                Content = "用户密码修改",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Password16 },
                 TargetPageType = typeof(Views.Pages.DashboardPage)
+            },
+            new NavigationViewItem()
+            {
+                Content = "Console 口密码修改",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Password20 },
+                TargetPageType = typeof(Views.Pages.ConsoleChangePage)
             },
             new NavigationViewItem()
             {
