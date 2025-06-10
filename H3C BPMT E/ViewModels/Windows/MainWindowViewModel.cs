@@ -13,7 +13,7 @@ namespace H3C_BPMT_E.ViewModels.Windows
         {
             new NavigationViewItem()
             {
-                Content = "用户密码修改",
+                Content = "SSH 密码修改",
                 Icon = new SymbolIcon { Symbol = SymbolRegular.Password16 },
                 TargetPageType = typeof(Views.Pages.DashboardPage)
             },

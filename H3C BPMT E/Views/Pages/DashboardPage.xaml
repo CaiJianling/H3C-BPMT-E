@@ -45,7 +45,7 @@
             <ui:TextBlock
                 Margin="10,0,0,0"
                 FontSize="20"
-                Text="用户密码修改"
+                Text="SSH 密码修改"
                 TextWrapping="Wrap" />
         </StackPanel>
 
